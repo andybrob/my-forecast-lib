@@ -1,17 +1,18 @@
-from forecast_lib.config import LOG_LEVEL
+from forecast_lib.config import Config
 
 import logging
 
 def get_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
-    logger.setLevel(LOG_LEVEL)
+    config = Config()
+    logger.setLevel(config.log_level)
 
     # Ensure we have a StreamHandler configured for INFO
     has_stream = False
     for h in logger.handlers:
         if isinstance(h, logging.StreamHandler):
             has_stream = True
-            h.setLevel(LOG_LEVEL)
+            h.setLevel(config.log_level)
             h.setFormatter(logging.Formatter(
                 "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
             ))
