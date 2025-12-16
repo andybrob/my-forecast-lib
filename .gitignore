@@ -14,3 +14,9 @@ models/
 
 # Logs
 *.log
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
