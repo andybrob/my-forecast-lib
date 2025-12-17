@@ -1,5 +1,6 @@
 import argparse
 from forecast_lib.utils import add
+from forecast_lib.train import train
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -13,9 +14,14 @@ def main() -> None:
     add_parser.add_argument("a", type=float)
     add_parser.add_argument("b", type=float)
 
+    train_parser = subparsers.add_parser("train", help="Run training job")
+    train_parser.add_argument("--run-id", required=True)
+    train_parser.add_argument("--output-dir", default="artifacts")
+
     args = parser.parse_args()
 
     if args.command == "add":
-        result = add(args.a, args.b)
-        print(result)
+        print(add(args.a, args.b))
 
+    elif args.command == "train":
+        train(run_id=args.run_id, output_dir=args.output_dir)
