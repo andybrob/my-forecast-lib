@@ -20,3 +20,8 @@ dist/
 build/
 *.egg-info/
 
+#Training artifacts / outputs
+artifacts/
+
+# Accidental local dirs
+my-forecast-lib/
