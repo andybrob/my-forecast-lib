@@ -4,17 +4,26 @@ from forecast_lib.logging_utils import get_logger
 
 logger = get_logger(__name__)
 
-def train(run_id: str, output_dir: str = "artifacts") -> None:
+def train(run_id: str, output_dir: str = "artifacts", force: bool = False) -> None:
     """
     Simulated training job.
-    Safe to rerun (idempotent).
+    Contract:
+
+     - Writes outputs under artifacts/<run_id>/
+     - Creates DONE marker when successful
+     - If DONE exists and force=False, it does nothing (safe retry)
     """
-    out = Path(output_dir)
-    out.mkdir(parents=True, exist_ok=True)
+    run_dir = Path(output_dir) / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
 
-    model_path = out / f"model_{run_id}.json"
+    done_path = run_dir / "DONE"
+    model_path = run_dir / "model.json"
 
-    logger.info("Starting training run_id=%s", run_id)
+    if done_path.exists() and not force:
+        logger.info("Run %s already complete (%s exists). Skipping.", run_id, done_path)
+        return
+
+    logger.info("Starting training run_id=%s output_dir=%s", run_id, run_dir)
 
     model = {
         "run_id": run_id,
@@ -24,6 +33,7 @@ def train(run_id: str, output_dir: str = "artifacts") -> None:
 
     # Idempotent write (overwrite is safe)
     model_path.write_text(json.dumps(model, indent=2))
+    done_path.write_text("ok\n")
 
     logger.info("Saved model to %s", model_path)
-
+    logger.info("Wrote DONE marker to %s", done_path)

@@ -17,6 +17,7 @@ def main() -> None:
     train_parser = subparsers.add_parser("train", help="Run training job")
     train_parser.add_argument("--run-id", required=True)
     train_parser.add_argument("--output-dir", default="artifacts")
+    train_parser.add_argument("--force", action="store_true")
 
     args = parser.parse_args()
 
@@ -24,4 +25,4 @@ def main() -> None:
         print(add(args.a, args.b))
 
     elif args.command == "train":
-        train(run_id=args.run_id, output_dir=args.output_dir)
+        train(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
