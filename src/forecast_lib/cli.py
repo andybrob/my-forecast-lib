@@ -1,6 +1,8 @@
+from pathlib import Path
+from forecast_lib.run_manifest import write_run_manifest
 from forecast_lib.evaluate import evaluate
 from forecast_lib.promote import promote
-
+import sys
 import argparse
 from forecast_lib.utils import add
 from forecast_lib.train import train
@@ -40,21 +42,33 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.command == "add":
-        print(add(args.a, args.b))
+    try:
+        if args.command == "add":
+            print(add(args.a, args.b))
 
-    elif args.command == "train":
-        train(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
+        elif args.command == "train":
+            train(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
 
-    elif args.command == "evaluate":
-        evaluate(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
+        elif args.command == "evaluate":
+            evaluate(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
 
-    elif args.command == "promote":
-        promote(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
+        elif args.command == "promote":
+            promote(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
 
-    elif args.command == "pipeline":
-        # Force means “force each step”
-        train(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
-        evaluate(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
-        promote(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
+        elif args.command == "pipeline":
+            run_dir = Path(args.output_dir) / args.run_id
+            steps = ["train", "evaluate", "promote"]
 
+            try:
+                train(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
+                evaluate(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
+                promote(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
+                write_run_manifest(run_dir, status="success", steps=steps)
+            except Exception:
+                write_run_manifest(run_dir, status="failure", steps=steps)
+                raise
+
+    except Exception as e:
+        # Critical: non-zero exit code signals failure to scheduler
+        print(f"ERROR: {e}", file=sys.stderr)
+        raise SystemExit(1)
