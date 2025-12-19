@@ -11,6 +11,7 @@ def test_run_manifest_written(tmp_path: Path) -> None:
         status="success",
         steps=["train", "eval"],
         step_status={"train": "success", "eval": "skipped"},
+        config={"base_delay_s": 0.2},
     )
 
     data = json.loads((run_dir / "run.json").read_text())
@@ -18,4 +19,5 @@ def test_run_manifest_written(tmp_path: Path) -> None:
     assert data["status"] == "success"
     assert data["step_status"]["train"] == "success"
     assert "timestamp_utc" in data
+    assert data["config"]["base_delay_s"] == 0.2
 

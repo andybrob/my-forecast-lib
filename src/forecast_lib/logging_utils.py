@@ -5,7 +5,8 @@ import logging
 def get_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
     config = Config()
-    logger.setLevel(config.log_level)
+    level = getattr(config, "log_level", "INFO")
+    logger.setLevel(level)
 
     # Ensure we have a StreamHandler configured for INFO
     has_stream = False

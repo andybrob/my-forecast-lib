@@ -1,3 +1,4 @@
+from forecast_lib.config import Config
 from forecast_lib.retry_utils import retry
 from forecast_lib.step_state import done_path
 from forecast_lib.run_manifest import write_run_manifest
@@ -59,40 +60,64 @@ def main() -> None:
             promote(run_id=args.run_id, output_dir=args.output_dir, force=args.force)
 
         elif args.command == "pipeline":
-            run_dir = Path(args.output_dir) / args.run_id
+            cfg = Config()
+            output_dir = args.output_dir or cfg.output_dir
+            run_dir = Path(output_dir) / args.run_id
             run_dir.mkdir(parents=True, exist_ok=True)
 
             steps = ["train", "evaluate", "promote"]
             step_status = {s: "pending" for s in steps}
 
             def run_one(step: str) -> None:
-                dp = done_path(args.output_dir, args.run_id, step)
+                dp = done_path(output_dir, args.run_id, step)
                 if dp.exists() and not args.force:
                     step_status[step] = "skipped"
                     return
 
                 if step == "train":
-                    retry(lambda: train(run_id=args.run_id, output_dir=args.output_dir, force=args.force),
-                  retries=2, base_delay_s=0.2)
+                    retry(lambda: train(run_id=args.run_id, output_dir=output_dir, force=args.force),
+                  retries=cfg.retries_train, base_delay_s=cfg.base_delay_s)
                 elif step == "evaluate":
-                    retry(lambda: evaluate(run_id=args.run_id, output_dir=args.output_dir, force=args.force),
-                  retries=2, base_delay_s=0.2)
+                    retry(lambda: evaluate(run_id=args.run_id, output_dir=output_dir, force=args.force),
+                  retries=cfg.retries_evaluate, base_delay_s=cfg.base_delay_s)
                 elif step == "promote":
-                    retry(lambda: promote(run_id=args.run_id, output_dir=args.output_dir, force=args.force),
-                  retries=1, base_delay_s=0.2)
+                    retry(lambda: promote(run_id=args.run_id, output_dir=output_dir, force=args.force),
+                  retries=cfg.retries_promote, base_delay_s=cfg.base_delay_s)
 
                 step_status[step] = "success"
 
             try:
                 for s in steps:
                     run_one(s)
-                write_run_manifest(run_dir, status="success", steps=steps, step_status=step_status)
+                write_run_manifest(
+                    run_dir, 
+                    status="success", 
+                    steps=steps, 
+                    step_status=step_status,
+                    config={
+                        "retries_train": cfg.retries_train,
+                        "retries_evaluate": cfg.retries_evaluate,
+                        "retries_promote": cfg.retries_promote,
+                        "base_delay_s": cfg.base_delay_s,
+                    },
+                )
             except Exception:
         # mark not-run steps explicitly
                 for s in steps:
                     if step_status[s] == "pending":
                         step_status[s] = "not_run"
-                write_run_manifest(run_dir, status="failure", steps=steps, step_status=step_status)
+                write_run_manifest(
+                    run_dir, 
+                    status="failure", 
+                    steps=steps, 
+                    step_status=step_status,
+                    config={
+                        "retries_train": cfg.retries_train,
+                        "retries_evaluate": cfg.retries_evaluate,
+                        "retries_promote": cfg.retries_promote,
+                        "base_delay_s": cfg.base_delay_s,
+                     }, 
+                )
                 raise
 
     except Exception as e:

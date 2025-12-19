@@ -23,9 +23,6 @@ def evaluate(run_id: str, output_dir: str = "artifacts", force: bool = False) ->
 
     logger.info("Evaluating run_id=%s", run_id)
 
-    if "FAIL" in run_id:
-        raise ValueError("Intentional failure for testing failure semantics")
-
     model = json.loads(model_path.read_text())
 
     # Simulated metric (deterministic so reruns match)
