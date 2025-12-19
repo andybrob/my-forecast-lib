@@ -1,5 +1,26 @@
 import os
 from dataclasses import dataclass
+import importlib.metadata
+import subprocess
+
+def get_package_version() -> str:
+    try:
+        return importlib.metadata.version("forecast-lib")
+    except importlib.metadata.PackageNotFoundError:
+        return "unknown"
+
+def get_git_commit() -> str:
+    try:
+        return (
+            subprocess.check_output(
+                ["git", "rev-parse", "HEAD"],
+                stderr=subprocess.DEVNULL,
+            )
+            .decode()
+            .strip()
+        )
+    except Exception:
+        return "unknown"
 
 def _get_env(name: str, default: str) -> str:
     return os.environ.get(name, default)
@@ -25,3 +46,6 @@ class Config:
     base_delay_s: float = _get_float("FORECAST_BASE_DELAY_S", 0.2)
     log_level: str = _get_log_level("FORECAST_LOG_LEVEL", "INFO")
 
+    # identity metadata
+    package_version: str = get_package_version()
+    git_commit: str = get_git_commit()

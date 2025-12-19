@@ -99,6 +99,8 @@ def main() -> None:
                         "retries_evaluate": cfg.retries_evaluate,
                         "retries_promote": cfg.retries_promote,
                         "base_delay_s": cfg.base_delay_s,
+                        "package_version": cfg.package_version,
+                        "git_commit": cfg.git_commit,
                     },
                 )
             except Exception:
@@ -116,6 +118,8 @@ def main() -> None:
                         "retries_evaluate": cfg.retries_evaluate,
                         "retries_promote": cfg.retries_promote,
                         "base_delay_s": cfg.base_delay_s,
+                        "package_version": cfg.package_version, 
+                        "git_commit": cfg.git_commit,
                      }, 
                 )
                 raise
