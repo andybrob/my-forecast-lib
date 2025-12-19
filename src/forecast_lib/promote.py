@@ -22,8 +22,10 @@ def promote(run_id: str, output_dir: str = "artifacts", force: bool = False) -> 
     done_path = prod_dir / "DONE"
 
     if done_path.exists() and not force:
-        logger.info("Production already set (%s exists). Skipping.", done_path)
-        return
+        current = done_path.read_text().strip()
+        if current == f"ok {run_id}":
+            logger.info("Production already set for %s. Skipping.", run_id)
+            return
 
     logger.info("Promoting run_id=%s to %s", run_id, prod_dir)
 
